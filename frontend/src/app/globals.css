@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #0b0f1a;
+  color: #f4f6fb;
+  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(255, 185, 56, 0.35);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0f1a;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f2840;
+  border-radius: 999px;
+}
+
+@layer components {
+  .glass {
+    @apply border border-white/10 bg-white/[0.04] backdrop-blur-xl;
+  }
+  .glass-strong {
+    @apply border border-white/15 bg-night-700/70 backdrop-blur-2xl;
+  }
+  .text-gold-gradient {
+    @apply bg-gold-text bg-clip-text text-transparent;
+  }
+  .container-x {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8;
+  }
+  .input {
+    @apply w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none transition focus:border-gold/60 focus:bg-white/[0.07];
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-medium uppercase tracking-wide text-white/60;
+  }
+}
+
+/* Rain overlay */
+.rain-layer {
+  background-image: linear-gradient(
+    105deg,
+    transparent 0,
+    transparent 47%,
+    rgba(180, 200, 255, 0.18) 49%,
+    transparent 51%
+  );
+  background-size: 60px 90px;
+  opacity: 0.35;
+}
+
+.ecg-path {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Leaflet dark polish */
+.leaflet-container {
+  background: #0b0f1a;
+  font-family: var(--font-poppins), sans-serif;
+}
+.leaflet-control-attribution {
+  background: rgba(11, 15, 26, 0.7) !important;
+  color: #8892a8 !important;
+}
+.leaflet-control-attribution a {
+  color: #ffb938 !important;
+}
+.gh-marker {
+  border-radius: 9999px;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08), 0 0 18px currentColor;
+}
+
+@keyframes gh-beat {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+
+@keyframes gh-flash {
+  0%, 45% { opacity: 0.95; }
+  50%, 100% { opacity: 0.06; }
+}
