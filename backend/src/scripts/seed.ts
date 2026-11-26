@@ -15,21 +15,64 @@ import { logger } from '../utils/logger';
 
 const { demoCenterLat: LAT, demoCenterLng: LNG } = env;
 
+/**
+ * Remove a unique index left over from an older User schema.
+ *
+ * The current User model does not contain a `username` field; authentication
+ * uses email. MongoDB keeps indexes even after deleteMany({}), so an old
+ * unique username index can reject multiple documents with username: null.
+ */
+async function removeObsoleteUserIndexes(): Promise<void> {
+  const indexes = await User.collection.indexes();
+  const hasLegacyUsernameIndex = indexes.some(
+    (index) => index.name === 'username_1',
+  );
+
+  if (hasLegacyUsernameIndex) {
+    await User.collection.dropIndex('username_1');
+    logger.warn(
+      'Removed obsolete MongoDB index username_1; current User schema uses email authentication.',
+    );
+  }
+}
+
 /** Random point within ~radiusKm of the demo centre. */
 const around = (radiusKm: number): [number, number] => {
   const r = (radiusKm / 111) * Math.sqrt(Math.random());
   const t = Math.random() * 2 * Math.PI;
-  return [LAT + r * Math.cos(t), LNG + (r * Math.sin(t)) / Math.cos((LAT * Math.PI) / 180)];
+
+  return [
+    LAT + r * Math.cos(t),
+    LNG + (r * Math.sin(t)) / Math.cos((LAT * Math.PI) / 180),
+  ];
 };
 
 const names = [
-  'Aarav Sharma', 'Diya Patel', 'Rohan Das', 'Ananya Iyer', 'Kabir Singh', 'Meera Nair',
-  'Arjun Reddy', 'Saanvi Gupta', 'Vihaan Mehta', 'Ishita Roy', 'Aditya Verma', 'Neha Joshi',
-  'Rahul Khan', 'Priya Menon', 'Siddharth Bose', 'Tanvi Kulkarni',
+  'Aarav Sharma',
+  'Diya Patel',
+  'Rohan Das',
+  'Ananya Iyer',
+  'Kabir Singh',
+  'Meera Nair',
+  'Arjun Reddy',
+  'Saanvi Gupta',
+  'Vihaan Mehta',
+  'Ishita Roy',
+  'Aditya Verma',
+  'Neha Joshi',
+  'Rahul Khan',
+  'Priya Menon',
+  'Siddharth Bose',
+  'Tanvi Kulkarni',
 ];
 
-async function seed() {
+async function seed(): Promise<void> {
   await connectDB();
+
+  // Remove this legacy index before inserting users. Deleting documents alone
+  // does not remove MongoDB indexes.
+  await removeObsoleteUserIndexes();
+
   logger.info('Clearing existing data...');
   await Promise.all([
     User.deleteMany({}),
@@ -42,7 +85,13 @@ async function seed() {
   ]);
 
   // First-aid guides
-  await FirstAidGuide.insertMany(guides.map((g) => ({ ...g, locale: 'en', reviewedBy: 'PENDING MEDICAL REVIEW' })));
+  await FirstAidGuide.insertMany(
+    guides.map((g) => ({
+      ...g,
+      locale: 'en',
+      reviewedBy: 'PENDING MEDICAL REVIEW',
+    })),
+  );
 
   // Hospitals
   const hospitalDefs = [
@@ -54,10 +103,15 @@ async function seed() {
   ] as const;
 
   const hospitals = [];
+
   for (const [i, h] of hospitalDefs.entries()) {
     const [lat, lng] = around(8);
     const stock: Record<string, number> = {};
-    BLOOD_GROUPS.forEach((g) => (stock[g] = g === 'HH' ? 0 : Math.floor(Math.random() * 12)));
+
+    BLOOD_GROUPS.forEach((g) => {
+      stock[g] = g === 'HH' ? 0 : Math.floor(Math.random() * 12);
+    });
+
     hospitals.push(
       await Hospital.create({
         name: h.name,
@@ -68,20 +122,27 @@ async function seed() {
         traumaLevel: h.trauma,
         hasICU: h.icu,
         hasBloodBank: h.blood,
-        beds: { icu: h.icu ? 4 + i : 0, general: 20 + i * 5 },
+        beds: {
+          icu: h.icu ? 4 + i : 0,
+          general: 20 + i * 5,
+        },
         bloodStock: stock,
         bloodStockUpdatedAt: new Date(),
-      })
+      }),
     );
   }
 
   // Ambulances
   for (let i = 0; i < 6; i++) {
     const [lat, lng] = around(7);
+
     await Ambulance.create({
       vehicleNumber: `DL01AB${1000 + i}`,
       type: i % 3 === 0 ? 'ALS' : 'BLS',
-      operator: i % 2 === 0 ? 'State 108 Service' : hospitals[i % hospitals.length].name,
+      operator:
+        i % 2 === 0
+          ? 'State 108 Service'
+          : hospitals[i % hospitals.length].name,
       phone: `+91 98000 0${2000 + i}`,
       status: 'available',
       location: toPoint(lat, lng),
@@ -119,6 +180,7 @@ async function seed() {
   // Responders (verified, available, within ~2.5 km of the centre so the SOS demo finds them)
   for (let i = 0; i < 8; i++) {
     const [lat, lng] = around(2.5);
+
     await User.create({
       name: names[i],
       email: `responder${i + 1}@goldenhour.app`,
@@ -131,7 +193,10 @@ async function seed() {
         isResponder: true,
         verified: true,
         available: true,
-        certifications: i % 2 === 0 ? ['First Aid (Red Cross)', 'CPR/BLS'] : ['CPR/BLS'],
+        certifications:
+          i % 2 === 0
+            ? ['First Aid (Red Cross)', 'CPR/BLS']
+            : ['CPR/BLS'],
         incidentsHandled: 0,
       },
     });
@@ -158,8 +223,9 @@ async function seed() {
   // Donors
   for (let i = 0; i < 16; i++) {
     const [lat, lng] = around(10);
+
     await User.create({
-      name: names[i % names.length] + ' (Donor)',
+      name: `${names[i % names.length]} (Donor)`,
       email: `donor${i + 1}@goldenhour.app`,
       phone: `+91 96000 0${4000 + i}`,
       password: 'Donor@12345',
@@ -174,6 +240,7 @@ async function seed() {
       },
     });
   }
+
   // One rare-group donor to demo the rare-donor flow
   await User.create({
     name: 'Rare Donor (HH)',
@@ -182,19 +249,25 @@ async function seed() {
     password: 'Donor@12345',
     role: 'citizen',
     location: toPoint(...around(12)),
-    donorProfile: { isDonor: true, bloodGroup: 'HH', available: true, donationsCount: 2 },
+    donorProfile: {
+      isDonor: true,
+      bloodGroup: 'HH',
+      available: true,
+      donationsCount: 2,
+    },
   });
 
   logger.info('Seed complete. Demo logins:');
-  logger.info(`  admin      ${env.seedAdminEmail} / ${env.seedAdminPassword}`);
+  logger.info(`  admin      ${env.seedAdminEmail} / [SEED_ADMIN_PASSWORD]`);
   logger.info('  citizen    citizen@goldenhour.app / Citizen@12345');
   logger.info('  responder  responder1@goldenhour.app / Responder@12345');
   logger.info('  donor      donor1@goldenhour.app / Donor@12345');
   logger.info('  hospital   hospital@goldenhour.app / Hospital@12345');
+
   await mongoose.disconnect();
 }
 
-seed().catch(async (err) => {
+seed().catch(async (err: unknown) => {
   logger.error(err);
   await mongoose.disconnect();
   process.exit(1);

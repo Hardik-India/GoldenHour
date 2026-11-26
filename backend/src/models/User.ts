@@ -41,7 +41,13 @@ export interface IUser extends Document {
 const userSchema = new Schema<IUser>(
   {
     name: { type: String, required: true, trim: true, maxlength: 80 },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
     phone: { type: String, required: true, trim: true },
     password: { type: String, required: true, minlength: 8, select: false },
     role: {
@@ -71,7 +77,7 @@ const userSchema = new Schema<IUser>(
     hospital: { type: Schema.Types.ObjectId, ref: 'Hospital' },
     isActive: { type: Boolean, default: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 userSchema.index({ location: '2dsphere' });
@@ -84,7 +90,10 @@ userSchema.pre('save', async function (this: IUser, next) {
   next();
 });
 
-userSchema.methods.comparePassword = function (this: IUser, candidate: string): Promise<boolean> {
+userSchema.methods.comparePassword = function (
+  this: IUser,
+  candidate: string,
+): Promise<boolean> {
   return bcrypt.compare(candidate, this.password);
 };
 
