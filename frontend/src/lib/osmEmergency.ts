@@ -146,7 +146,7 @@ export async function fetchOsmEmergencyResources(
     } as unknown as Hospital);
   }
 
-  hospitals.sort((a, b) => a.distanceKm - b.distanceKm);
+  hospitals.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
 
   if (ambulances.length === 0 && hospitals.length > 0) {
     hospitals.slice(0, 4).forEach((h, idx) => {
@@ -167,7 +167,7 @@ export async function fetchOsmEmergencyResources(
     });
   }
 
-  ambulances.sort((a, b) => a.distanceKm - b.distanceKm);
+  ambulances.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
 
   const result = { hospitals: hospitals.slice(0, 20), ambulances: ambulances.slice(0, 10) };
   cache.set(key, { ts: Date.now(), ...result });
