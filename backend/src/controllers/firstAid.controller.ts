@@ -5,9 +5,9 @@ import { asyncHandler } from '../utils/asyncHandler';
 /** GET /api/first-aid?locale=en */
 export const listGuides = asyncHandler(async (req, res) => {
   const locale = String(req.query.locale || 'en');
-  let items = await FirstAidGuide.find({ locale }).select('slug title category summary locale');
+  let items = await FirstAidGuide.find({ locale }).select('slug title category summary locale').lean();
   if (!items.length && locale !== 'en') {
-    items = await FirstAidGuide.find({ locale: 'en' }).select('slug title category summary locale');
+    items = await FirstAidGuide.find({ locale: 'en' }).select('slug title category summary locale').lean();
   }
   res.json({ success: true, items });
 });

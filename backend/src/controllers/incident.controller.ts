@@ -23,6 +23,8 @@ const POPULATE = [
   { path: 'reporter', select: 'name phone' },
 ];
 
+const toObjectId = (id: unknown): Types.ObjectId => new Types.ObjectId(String(id));
+
 const addTimeline = (incident: IIncident, event: string) => {
   incident.timeline.push({ at: new Date(), event });
 };
@@ -41,7 +43,7 @@ export const createIncident = asyncHandler(async (req: AuthRequest, res) => {
 
   const triageResult = runTriage(triage || {});
   const incident = new Incident({
-    reporter: user._id,
+    reporter: toObjectId(user._id),
     type,
     severity: triageResult.severity,
     address: address || '',
@@ -52,10 +54,10 @@ export const createIncident = asyncHandler(async (req: AuthRequest, res) => {
   });
 
   // 1. Nearby verified responders
-  const responders = await findNearbyResponders(coords, env.responderRadiusKm, user._id);
+  const responders = await findNearbyResponders(coords, env.responderRadiusKm, toObjectId(user._id));
   for (const { doc, distanceKm } of responders) {
     incident.responders.push({
-      user: doc._id as Types.ObjectId,
+      user: toObjectId(doc._id),
       status: 'notified',
       distanceKm: Number(distanceKm.toFixed(2)),
       etaMinutes: etaMinutes(distanceKm),
@@ -69,7 +71,7 @@ export const createIncident = asyncHandler(async (req: AuthRequest, res) => {
     trauma: type === 'road_accident' || type === 'bleeding',
   });
   if (hospitals[0]) {
-    incident.hospital = hospitals[0].doc._id as Types.ObjectId;
+    incident.hospital = toObjectId(hospitals[0].doc._id);
     addTimeline(incident, `Nearest suitable hospital: ${hospitals[0].doc.name}`);
   }
 
@@ -79,9 +81,9 @@ export const createIncident = asyncHandler(async (req: AuthRequest, res) => {
     const nearest = await findNearestAmbulance(coords);
     if (nearest) {
       nearest.doc.status = 'dispatched';
-      nearest.doc.currentIncident = incident._id as Types.ObjectId;
+      nearest.doc.currentIncident = toObjectId(incident._id) as unknown as typeof nearest.doc.currentIncident;
       await nearest.doc.save();
-      incident.ambulance = nearest.doc._id as Types.ObjectId;
+      incident.ambulance = toObjectId(nearest.doc._id);
       ambulanceEta = etaMinutes(nearest.distanceKm);
       addTimeline(incident, `Ambulance ${nearest.doc.vehicleNumber} dispatched (ETA ${ambulanceEta} min)`);
     }
@@ -93,7 +95,7 @@ export const createIncident = asyncHandler(async (req: AuthRequest, res) => {
   await Promise.all(
     responders.map(({ doc, distanceKm }) =>
       notifyUser({
-        userId: doc.id,
+        userId: String(doc._id),
         type: 'incident',
         title: `Emergency ${distanceKm.toFixed(1)} km away`,
         body: `${type.replace('_', ' ')} - severity ${triageResult.severity}`,
@@ -127,7 +129,7 @@ export const createIncident = asyncHandler(async (req: AuthRequest, res) => {
 
 /** GET /api/incidents/mine */
 export const myIncidents = asyncHandler(async (req: AuthRequest, res) => {
-  const items = await Incident.find({ reporter: req.user!._id }).sort({ createdAt: -1 }).limit(30);
+  const items = await Incident.find({ reporter: toObjectId(req.user!._id) }).sort({ createdAt: -1 }).limit(30);
   res.json({ success: true, items });
 });
 
@@ -156,7 +158,7 @@ export const nearbyIncidents = asyncHandler(async (req: AuthRequest, res) => {
 export const myActiveResponses = asyncHandler(async (req: AuthRequest, res) => {
   const items = await Incident.find({
     status: { $in: ['open', 'responder_assigned', 'on_scene'] },
-    'responders.user': req.user!._id,
+    'responders.user': toObjectId(req.user!._id),
   })
     .sort({ createdAt: -1 })
     .limit(10)

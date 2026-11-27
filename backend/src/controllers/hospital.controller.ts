@@ -1,12 +1,14 @@
-import { Hospital } from '../models/Hospital';
+import { Hospital, IHospital } from '../models/Hospital';
 import { AuthRequest } from '../types/express';
 import { ApiError } from '../utils/ApiError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { toPoint } from '../utils/geo';
 import { findNearbyHospitals } from '../services/matching.service';
 
-const serialize = (h: InstanceType<typeof Hospital>, distanceKm?: number) => ({
-  id: h.id,
+type HospitalLike = IHospital & { id?: string; _id?: unknown };
+
+const serialize = (h: HospitalLike, distanceKm?: number) => ({
+  id: h.id ?? String(h._id),
   name: h.name,
   address: h.address,
   city: h.city,
@@ -17,7 +19,10 @@ const serialize = (h: InstanceType<typeof Hospital>, distanceKm?: number) => ({
   hasBloodBank: h.hasBloodBank,
   open24x7: h.open24x7,
   beds: h.beds,
-  bloodStock: Object.fromEntries(h.bloodStock || []),
+  bloodStock:
+    h.bloodStock instanceof Map
+      ? Object.fromEntries(h.bloodStock)
+      : (h.bloodStock ?? {}),
   bloodStockUpdatedAt: h.bloodStockUpdatedAt,
   distanceKm: distanceKm !== undefined ? Number(distanceKm.toFixed(2)) : undefined,
 });
