@@ -8,15 +8,34 @@ import { logger } from '../utils/logger';
 
 let io: Server | null = null;
 
+const normalizeOrigin = (url: string) => url.trim().replace(/\/+$/, '');
+
+const allowedOrigins = new Set(
+  [env.clientUrl, 'http://localhost:3000']
+    .flatMap((v) => (v ? v.split(',') : []))
+    .map(normalizeOrigin)
+    .filter(Boolean)
+);
+
 /**
- * Rooms:
- *  - user:<id>       private events for one user (alerts, notifications)
- *  - incident:<id>   everyone following one incident (reporter, responders, ambulance)
- *  - public:stats    anonymous landing-page live counters
+- Rooms:
+-  - user:<id>       private events for one user (alerts, notifications)
+-  - incident:<id>   everyone following one incident (reporter, responders, ambulance)
+-  - public:stats    anonymous landing-page live counters
  */
 export function initSocket(httpServer: HttpServer): Server {
   io = new Server(httpServer, {
-    cors: { origin: env.clientUrl, credentials: true },
+    cors: {
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const cleanOrigin = normalizeOrigin(origin);
+        if (allowedOrigins.has(cleanOrigin) || cleanOrigin.endsWith('.vercel.app')) {
+          return callback(null, true);
+        }
+        return callback(new Error(`Socket CORS blocked for origin: ${origin}`));
+      },
+      credentials: true,
+    },
   });
 
   io.use((socket, next) => {
