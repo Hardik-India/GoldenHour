@@ -11,10 +11,11 @@ html {
 }
 
 body {
-  background: #0b0f1a;
+  background: #070b15;
   color: #f4f6fb;
   font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 ::selection {
@@ -25,11 +26,14 @@ body {
   width: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b0f1a;
+  background: #070b15;
 }
 ::-webkit-scrollbar-thumb {
   background: #1f2840;
   border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2f3d61;
 }
 
 @layer components {
@@ -37,7 +41,7 @@ body {
     @apply border border-white/10 bg-white/[0.04] backdrop-blur-xl;
   }
   .glass-strong {
-    @apply border border-white/15 bg-night-700/70 backdrop-blur-2xl;
+    @apply border border-white/15 bg-night-700/75 backdrop-blur-2xl;
   }
   .text-gold-gradient {
     @apply bg-gold-text bg-clip-text text-transparent;
@@ -51,6 +55,62 @@ body {
   .label {
     @apply mb-1.5 block text-xs font-medium uppercase tracking-wide text-white/60;
   }
+}
+
+/* =====================================
+   CREATIVE ATMOSPHERIC BACKDROPS & FX
+===================================== */
+
+.gh-tactical-grid {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.065) 1px, transparent 0),
+    linear-gradient(to right, rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
+  background-size: 28px 28px, 112px 112px, 112px 112px;
+}
+
+.gh-page-canvas {
+  background-color: #070b15;
+  background-image:
+    radial-gradient(55% 42% at 88% 8%, rgba(255, 59, 78, 0.16) 0%, transparent 65%),
+    radial-gradient(50% 45% at 8% 32%, rgba(255, 185, 56, 0.11) 0%, transparent 65%),
+    radial-gradient(45% 40% at 82% 82%, rgba(45, 212, 191, 0.11) 0%, transparent 68%),
+    radial-gradient(38% 35% at 22% 92%, rgba(255, 59, 78, 0.09) 0%, transparent 65%);
+}
+
+.gh-section-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 185, 56, 0.22) 25%,
+    rgba(255, 59, 78, 0.25) 50%,
+    rgba(45, 212, 191, 0.22) 75%,
+    transparent 100%
+  );
+}
+
+.gh-card-glow {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.gh-card-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(560px circle at 50% 0%, rgba(255, 185, 56, 0.1), transparent 48%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.gh-card-glow:hover::before {
+  opacity: 1;
 }
 
 /* Rain overlay */
@@ -71,34 +131,6 @@ body {
   stroke-dashoffset: 1200;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* Leaflet dark polish */
-.leaflet-container {
-  background: #0b0f1a;
-  font-family: var(--font-poppins), sans-serif;
-}
-.leaflet-control-attribution {
-  background: rgba(11, 15, 26, 0.7) !important;
-  color: #8892a8 !important;
-}
-.leaflet-control-attribution a {
-  color: #ffb938 !important;
-}
-.gh-marker {
-  border-radius: 9999px;
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08), 0 0 18px currentColor;
-}
-
 @keyframes gh-beat {
   0% { transform: scale(1); }
   35% { transform: scale(1.14); }
@@ -110,10 +142,61 @@ body {
   50%, 100% { opacity: 0.06; }
 }
 
+@keyframes gh-radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes gh-beam-slide {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(340%); }
+}
+
+@keyframes gh-strobe {
+  0%, 49% { background-color: rgba(255, 59, 78, 0.85); }
+  50%, 100% { background-color: rgba(255, 255, 255, 0.85); }
+}
+
+@keyframes gh-drift {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(18px, -16px) scale(1.06); }
+}
+
+.animate-radar-sweep {
+  animation: gh-radar-sweep 6s linear infinite;
+}
+
+.animate-beam {
+  animation: gh-beam-slide 3.2s linear infinite;
+}
+
+.animate-strobe {
+  animation: gh-strobe 0.42s steps(1) infinite;
+}
+
+.animate-drift {
+  animation: gh-drift 12s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* =====================================
    GOLDENHOUR - DARK LEAFLET MAP
 ===================================== */
+
+.leaflet-container {
+  background: #0b0f1a;
+  font-family: var(--font-poppins), sans-serif;
+}
 
 .gh-dark-tiles {
   filter:
@@ -124,7 +207,6 @@ body {
     saturate(75%);
 }
 
-/* Marker wrapper */
 .gh-marker-wrapper {
   background: transparent !important;
   border: none !important;
@@ -142,9 +224,9 @@ body {
     calc((24px - var(--marker-size)) / 2),
     calc((24px - var(--marker-size)) / 2)
   );
+  border-radius: 9999px;
 }
 
-/* Marker central glowing point */
 .gh-marker-core {
   position: relative;
   z-index: 3;
@@ -158,7 +240,6 @@ body {
     0 0 18px var(--marker-color);
 }
 
-/* SOS ripple */
 .gh-marker-pulse {
   position: absolute;
   inset: -10px;
@@ -177,21 +258,18 @@ body {
     transform: scale(0.5);
     opacity: 0.9;
   }
-
   100% {
     transform: scale(2.5);
     opacity: 0;
   }
 }
 
-/* Popup styling */
 .gh-map-popup {
-  color: #0B0F1A;
+  color: #f4f6fb;
   font-weight: 600;
   font-size: 13px;
 }
 
-/* Dark zoom controls */
 .leaflet-control-zoom a {
   background: #151c2b !important;
   color: #FFB938 !important;
@@ -202,7 +280,6 @@ body {
   background: #242e40 !important;
 }
 
-/* Attribution */
 .leaflet-control-attribution {
   background: rgba(11, 15, 26, 0.85) !important;
   color: #aab3c5 !important;
@@ -212,14 +289,13 @@ body {
   color: #FFB938 !important;
 }
 
-/* Popup */
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
   background: #151c2b !important;
-  color: white !important;
+  color: #f4f6fb !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .leaflet-popup-content {
-  margin: 12px 15px !important;
+  margin: 10px 14px !important;
 }
-

@@ -55,10 +55,11 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="grid min-h-screen place-items-center bg-night-glow px-4">
-      <Suspense>
+    <div className="grid min-h-screen place-items-center gh-page-canvas relative overflow-hidden px-4">
+      <div className="pointer-events-none absolute inset-0 gh-tactical-grid opacity-35" />
+      <div className="relative z-10 w-full flex justify-center"><Suspense>
         <LoginForm />
-      </Suspense>
+      </Suspense></div>
     </div>
   );
 }

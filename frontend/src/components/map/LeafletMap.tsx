@@ -1,10 +1,10 @@
-
 'use client';
 
 import { useEffect } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
+  Circle,
   MapContainer,
   Marker,
   Popup,
@@ -29,6 +29,14 @@ export interface MapMarker {
   label?: string;
 }
 
+export interface HotspotZone {
+  lat: number;
+  lng: number;
+  count: number;
+  label: string;
+  risk?: 'critical' | 'high' | 'moderate';
+}
+
 const COLORS: Record<MarkerKind, string> = {
   sos: '#FF3B4E',
   responder: '#FFB938',
@@ -47,7 +55,6 @@ const SIZES: Record<MarkerKind, number> = {
   donor: 16,
 };
 
-// Custom glowing Leaflet markers
 function createIcon(kind: MarkerKind) {
   const size = SIZES[kind];
   const color = COLORS[kind];
@@ -78,25 +85,17 @@ function createIcon(kind: MarkerKind) {
   });
 }
 
-// Keep the map centered when the selected location changes
-function Recenter({
-  center,
-  zoom,
-}: {
-  center: [number, number];
-  zoom: number;
-}) {
+function Recenter({ center, zoom }: { center: [number, number]; zoom: number }) {
   const map = useMap();
 
   useEffect(() => {
     map.setView(center, zoom, { animate: true });
     map.invalidateSize();
-  }, [map, center[0], center[1], zoom]);
+  }, [map, center, zoom]);
 
   return null;
 }
 
-// Fix map dimensions after initial rendering
 function MapResizeHandler() {
   const map = useMap();
 
@@ -115,6 +114,7 @@ export interface LeafletMapProps {
   center: [number, number];
   zoom?: number;
   markers?: MapMarker[];
+  hotspots?: HotspotZone[];
   lines?: [number, number][][];
   className?: string;
 }
@@ -123,6 +123,7 @@ export default function LeafletMap({
   center,
   zoom = 14,
   markers = [],
+  hotspots = [],
   lines = [],
   className,
 }: LeafletMapProps) {
@@ -138,7 +139,6 @@ export default function LeafletMap({
         overflow: 'hidden',
       }}
     >
-      {/* OpenStreetMap tiles: no API key required */}
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -148,6 +148,31 @@ export default function LeafletMap({
 
       <Recenter center={center} zoom={zoom} />
       <MapResizeHandler />
+
+      {/* Translucent glowing hotspot heat zones */}
+      {hotspots.map((h, idx) => {
+        const isCrit = h.risk === 'critical' || h.count >= 16;
+        const tone = isCrit ? '#FF3B4E' : '#FFB938';
+        return (
+          <Circle
+            key={`hs-${idx}`}
+            center={[h.lat, h.lng]}
+            radius={Math.min(1300, 320 + h.count * 42)}
+            pathOptions={{
+              color: tone,
+              fillColor: tone,
+              fillOpacity: isCrit ? 0.25 : 0.18,
+              weight: 1.5,
+            }}
+          >
+            <Popup>
+              <div className="gh-map-popup">
+                {h.label} · {h.count} incidents
+              </div>
+            </Popup>
+          </Circle>
+        );
+      })}
 
       {/* Emergency and responder routes */}
       {lines.map((line, index) => (
@@ -163,7 +188,7 @@ export default function LeafletMap({
         />
       ))}
 
-      {/* SOS, responder, ambulance, hospital and donor markers */}
+      {/* Glowing custom markers */}
       {markers.map((marker) => (
         <Marker
           key={marker.id}
@@ -173,9 +198,7 @@ export default function LeafletMap({
         >
           {marker.label && (
             <Popup>
-              <div className="gh-map-popup">
-                {marker.label}
-              </div>
+              <div className="gh-map-popup">{marker.label}</div>
             </Popup>
           )}
         </Marker>

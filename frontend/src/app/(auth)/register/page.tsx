@@ -95,10 +95,11 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <div className="grid min-h-screen place-items-center bg-night-glow px-4 py-10">
-      <Suspense>
+    <div className="grid min-h-screen place-items-center gh-page-canvas relative overflow-hidden px-4 py-10">
+      <div className="pointer-events-none absolute inset-0 gh-tactical-grid opacity-35" />
+      <div className="relative z-10 w-full flex justify-center"><Suspense>
         <RegisterForm />
-      </Suspense>
+      </Suspense></div>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Users, ArrowRight } from 'lucide-react';
+import { Menu, X, Users, ArrowRight, Siren } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/store/auth';
@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 
 const links = [
   { href: '#home', label: 'Home' },
+  { href: '#demo', label: 'Live Demo' },
   { href: '#features', label: 'Features' },
   { href: '#impact', label: 'Impact' },
   { href: '#faq', label: 'FAQs' },
@@ -31,15 +32,15 @@ export function Navbar() {
     <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6">
       <div
         className={cn(
-          'mx-auto flex max-w-[1620px] items-center justify-between rounded-full border px-6 transition-all duration-300',
+          'mx-auto flex max-w-[1620px] items-center justify-between rounded-full border px-5 sm:px-6 transition-all duration-300',
           scrolled
-            ? 'glass-strong border-white/15 py-2 shadow-lg shadow-black/40'
-            : 'border-white/10 bg-night/40 py-3 backdrop-blur-md'
+            ? 'glass-strong border-white/15 py-2 shadow-xl shadow-black/50'
+            : 'border-white/10 bg-night/45 py-2.5 backdrop-blur-md'
         )}
       >
         <Logo />
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-7 lg:flex">
           {links.map((l) => (
             <a
               key={l.href}
@@ -52,20 +53,29 @@ export function Navbar() {
               {l.label}
             </a>
           ))}
+          <Link href="/first-aid" className="border-b-2 border-transparent pb-1 text-sm text-white/75 transition hover:text-teal">
+            First Aid
+          </Link>
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
+          <Link
+            href="/sos"
+            className="inline-flex items-center gap-1.5 rounded-full border border-alert/50 bg-alert/15 px-4 py-2 text-xs font-semibold text-alert-soft transition hover:bg-alert hover:text-white"
+          >
+            <Siren size={14} /> SOS Console
+          </Link>
           {user ? (
             <Button href="/sos" variant="gold" className="px-5 py-2">
               Open app
             </Button>
           ) : (
             <>
-              <Link href="/login" className="text-sm text-white/70 hover:text-white">
+              <Link href="/login" className="text-sm text-white/75 hover:text-white">
                 Log in
               </Link>
               <Button href="/register?role=responder" variant="gold" className="px-5 py-2">
-                <Users size={16} /> Become a Responder <ArrowRight size={16} />
+                <Users size={15} /> Become a Responder <ArrowRight size={15} />
               </Button>
             </>
           )}
@@ -78,12 +88,18 @@ export function Navbar() {
 
       {open && (
         <div className="glass-strong mx-auto mt-2 max-w-[1620px] rounded-3xl p-5 md:hidden">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3.5">
             {links.map((l) => (
               <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="text-white/80">
                 {l.label}
               </a>
             ))}
+            <Link href="/first-aid" onClick={() => setOpen(false)} className="text-teal">
+              First-Aid Studio
+            </Link>
+            <Button href="/sos" className="w-full">
+              <Siren size={16} /> Open SOS Console
+            </Button>
             <Button href="/register?role=responder" variant="gold">
               Become a Responder
             </Button>

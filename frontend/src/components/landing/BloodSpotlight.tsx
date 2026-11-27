@@ -1,20 +1,37 @@
 'use client';
 
+import { useState } from 'react';
 import { Reveal } from '@/components/ui/Reveal';
 import { Button } from '@/components/ui/Button';
-import { BLOOD_GROUPS } from '@/lib/types';
+import { BLOOD_GROUPS, BloodGroup } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 const donors = [
-  { angle: 0, r: 120, delay: 0 },
-  { angle: 120, r: 120, delay: 0.3 },
-  { angle: 240, r: 120, delay: 0.6 },
-  { angle: 60, r: 170, delay: 0.9 },
-  { angle: 200, r: 170, delay: 1.2 },
+  { angle: 0, r: 120 },
+  { angle: 120, r: 120 },
+  { angle: 240, r: 120 },
+  { angle: 60, r: 170 },
+  { angle: 200, r: 170 },
 ];
 
+const COMPAT_PREVIEW: Record<BloodGroup, BloodGroup[]> = {
+  'O-': ['O-'],
+  'O+': ['O-', 'O+'],
+  'A-': ['A-', 'O-'],
+  'A+': ['A+', 'A-', 'O+', 'O-'],
+  'B-': ['B-', 'O-'],
+  'B+': ['B+', 'B-', 'O+', 'O-'],
+  'AB-': ['AB-', 'A-', 'B-', 'O-'],
+  'AB+': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'],
+  HH: ['HH'],
+};
+
 export function BloodSpotlight() {
+  const [selected, setSelected] = useState<BloodGroup>('O-');
+  const compat = COMPAT_PREVIEW[selected];
+
   return (
-    <section className="container-x py-20">
+    <section className="container-x py-24">
       <div className="grid items-center gap-12 lg:grid-cols-2">
         <Reveal>
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-alert">Blood Link</p>
@@ -24,16 +41,37 @@ export function BloodSpotlight() {
           <p className="mt-4 text-white/65">
             Many patients still depend on relatives hunting for donors after the need arises. Blood Link alerts
             eligible, compatible donors nearby the moment a request is posted, tracks who accepted, and respects the
-            donation cool-down so people only give when it is safe.
+            90-day donation cool-down so people only give when it is safe.
           </p>
-          <div className="mt-6 flex flex-wrap gap-2">
+
+          <p className="mt-5 text-xs font-medium uppercase tracking-wider text-white/45">
+            Tap any patient group to preview compatible donors:
+          </p>
+          <div className="mt-2.5 flex flex-wrap gap-2">
             {BLOOD_GROUPS.map((g) => (
-              <span key={g} className="rounded-full border border-alert/30 bg-alert/10 px-3 py-1 text-sm font-medium text-alert-soft">
+              <button
+                key={g}
+                type="button"
+                onClick={() => setSelected(g)}
+                className={cn(
+                  'rounded-full border px-3.5 py-1.5 text-sm font-medium transition',
+                  selected === g
+                    ? 'border-alert bg-alert text-white shadow-glow-red'
+                    : 'border-alert/30 bg-alert/10 text-alert-soft hover:border-alert/60'
+                )}
+              >
                 {g === 'HH' ? 'Bombay (HH)' : g}
-              </span>
+              </button>
             ))}
           </div>
-          <div className="mt-8 flex gap-3">
+
+          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs text-white/75">
+            <span className="font-semibold text-gold">{selected === 'HH' ? 'Bombay (HH)' : selected}</span> patient can receive from:{' '}
+            <span className="font-semibold text-teal">{compat.join(', ')}</span>
+            {selected === 'HH' && <span className="ml-2 text-alert-soft">(3× expanded rare search radius)</span>}
+          </div>
+
+          <div className="mt-7 flex flex-wrap gap-3">
             <Button href="/blood">Request blood</Button>
             <Button href="/register?role=donor" variant="glass">
               Become a donor
@@ -42,21 +80,24 @@ export function BloodSpotlight() {
         </Reveal>
 
         <Reveal delay={0.15}>
-          <div className="relative mx-auto grid h-[380px] w-[380px] max-w-full place-items-center">
+          <div className="relative mx-auto grid h-[390px] w-[390px] max-w-full place-items-center">
+            <div className="pointer-events-none absolute inset-6 rounded-full bg-alert/15 blur-3xl" />
             <div className="absolute inset-0 rounded-full border border-white/10" />
-            <div className="absolute inset-8 rounded-full border border-white/10" />
+            <div className="absolute inset-8 rounded-full border border-dashed border-alert/25" />
             <div className="absolute inset-0 animate-orbit">
               {donors.map((d, i) => (
                 <span
                   key={i}
-                  className="absolute left-1/2 top-1/2 grid h-9 w-9 place-items-center rounded-full border border-gold/50 bg-night-700 text-[11px] font-semibold text-gold shadow-glow-gold"
-                  style={{ transform: `rotate(${d.angle}deg) translate(${d.r}px) rotate(-${d.angle}deg) translate(-50%,-50%)` }}
+                  className="absolute left-1/2 top-1/2 grid h-10 w-10 place-items-center rounded-full border border-gold/55 bg-night-700 text-[11px] font-semibold text-gold shadow-glow-gold"
+                  style={{
+                    transform: `rotate(${d.angle}deg) translate(${d.r}px) rotate(-${d.angle}deg) translate(-50%,-50%)`,
+                  }}
                 >
                   {['O+', 'A+', 'B-', 'AB+', 'O-'][i]}
                 </span>
               ))}
             </div>
-            <svg viewBox="0 0 100 130" className="h-40 drop-shadow-[0_0_30px_rgba(255,59,78,0.7)]">
+            <svg viewBox="0 0 100 130" className="relative h-40 drop-shadow-[0_0_32px_rgba(255,59,78,0.75)]">
               <path d="M50 4 C50 4 12 54 12 82 a38 38 0 0 0 76 0 C88 54 50 4 50 4Z" fill="url(#drop)" />
               <path d="M32 84 a18 18 0 0 0 14 18" stroke="#fff" strokeOpacity="0.55" strokeWidth="4" fill="none" strokeLinecap="round" />
               <defs>
@@ -66,8 +107,8 @@ export function BloodSpotlight() {
                 </linearGradient>
               </defs>
             </svg>
-            <div className="glass-strong absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-2xl px-5 py-3 text-sm">
-              <span className="text-teal">●</span> <b>3 donors found</b> within 2 km
+            <div className="glass-strong absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-2xl px-5 py-3 text-sm shadow-xl">
+              <span className="text-teal">●</span> <b>3 compatible {selected} donors</b> within 2 km
             </div>
           </div>
         </Reveal>
